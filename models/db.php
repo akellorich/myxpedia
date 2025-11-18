@@ -9,7 +9,12 @@
         private $username;
         private $password;
         private $charset;
+        public $userid;
         // PDO - PHP Database Object 
+
+        function __construct(){
+            $this->userid=isset($_SESSION['userid'])?$_SESSION['userid']:1;
+        }
 
         // connect to the database
         function connect(){
@@ -36,6 +41,16 @@
             $rst=$this->getData($sql);
             return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
+    }
+
+    function generateRandomString($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@!$&#?%(){}[]:*_';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
     }
 
 ?>

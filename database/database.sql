@@ -1,6 +1,6 @@
 /*
 SQLyog Enterprise v13.1.1 (64 bit)
-MySQL - 10.4.27-MariaDB : Database - expediaflightbooking
+MySQL - 10.4.32-MariaDB : Database - expediaflightbooking
 *********************************************************************
 */
 
@@ -26,14 +26,14 @@ CREATE TABLE `airlines` (
   `homecountryid` int(11) DEFAULT NULL,
   `logo` varchar(1000) DEFAULT NULL COMMENT 'Path to the file for the logo',
   PRIMARY KEY (`airlineid`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*Data for the table `airlines` */
 
 insert  into `airlines`(`airlineid`,`airlinename`,`homecountryid`,`logo`) values 
 (1,'Kenya Airways',1,'kq.jpg'),
 (3,'Jambo Jet',1,'jambojet.jpg'),
-(5,'Safari Link',1,'safarilink.jpg');
+(4,'Fly 540',1,'fly540.jpg');
 
 /*Table structure for table `airports` */
 
@@ -99,19 +99,67 @@ insert  into `countries`(`countryid`,`countryname`) values
 (8,'Eritrea'),
 (9,'Burundi');
 
-/* Procedure structure for procedure `sp_checkairline` */
+/*Table structure for table `objects` */
 
-/*!50003 DROP PROCEDURE IF EXISTS  `sp_checkairline` */;
+DROP TABLE IF EXISTS `objects`;
 
-DELIMITER $$
+CREATE TABLE `objects` (
+  `objectid` int(11) NOT NULL AUTO_INCREMENT,
+  `objectname` varchar(100) DEFAULT NULL,
+  `objectcode` varchar(19) DEFAULT NULL,
+  PRIMARY KEY (`objectid`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_checkairline`($airlineid int,$airlinename varchar(50))
-BEGIN
-		select * 
-		from `airlines`
-		where `airlineid`!=$airlineid and `airlinename`=$airlinename;
-	END */$$
-DELIMITER ;
+/*Data for the table `objects` */
+
+insert  into `objects`(`objectid`,`objectname`,`objectcode`) values 
+(1,'Manage airports','1x001'),
+(2,'Manage airline','1x002'),
+(3,'Manage cities','1x003'),
+(4,'Manage countries','1x004'),
+(5,'Manage users','2x001');
+
+/*Table structure for table `userprivileges` */
+
+DROP TABLE IF EXISTS `userprivileges`;
+
+CREATE TABLE `userprivileges` (
+  `userprivilegeid` int(11) NOT NULL AUTO_INCREMENT,
+  `objectid` int(11) DEFAULT NULL,
+  `userid` int(11) DEFAULT NULL,
+  `active` tinyint(1) DEFAULT 1,
+  `dateadded` datetime DEFAULT NULL,
+  `addedby` int(11) DEFAULT NULL,
+  PRIMARY KEY (`userprivilegeid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `userprivileges` */
+
+/*Table structure for table `users` */
+
+DROP TABLE IF EXISTS `users`;
+
+CREATE TABLE `users` (
+  `userid` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) DEFAULT NULL,
+  `firstname` varchar(100) DEFAULT NULL,
+  `lastname` varchar(100) DEFAULT NULL,
+  `password` varchar(100) DEFAULT NULL,
+  `salt` varchar(50) DEFAULT NULL,
+  `systemadmin` int(11) DEFAULT 0,
+  `status` varchar(50) DEFAULT 'active',
+  `dateadded` datetime DEFAULT NULL,
+  `addedby` int(11) DEFAULT NULL,
+  `mobile` varchar(100) DEFAULT NULL,
+  `emailaddress` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`userid`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*Data for the table `users` */
+
+insert  into `users`(`userid`,`username`,`firstname`,`lastname`,`password`,`salt`,`systemadmin`,`status`,`dateadded`,`addedby`,`mobile`,`emailaddress`) values 
+(1,'testuser','Richard','','157b9787badb02582d2b78e4d5b1824e1df7fbe77ed69140f400900914fcffe6','qRywszsvMGvDlK9f}2?X',0,'active','2025-11-18 12:57:51',1,'',''),
+(2,'Admin','System','Admin','f67df10568f952f8776f01b061f321faad0fc4b1368eb46311650a9159ae52e3','K3]zR}G($h}b8)}G#5*e',0,'active','2025-11-18 13:50:55',1,'0727709772','akellorich@gmail.com');
 
 /* Procedure structure for procedure `sp_checkcity` */
 
@@ -136,6 +184,19 @@ DELIMITER $$
 BEGIN
 		select * from `countries`
 		where `countryid`!=$countryid and `countryname`=$countryname;
+	END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `sp_checkusername` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `sp_checkusername` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_checkusername`($userid int,$username varchar(50))
+BEGIN
+		select * from `users`
+		where userid!=$userid and username=$username;
 	END */$$
 DELIMITER ;
 
@@ -289,6 +350,21 @@ BEGIN
 	END */$$
 DELIMITER ;
 
+/* Procedure structure for procedure `sp_getallusers` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `sp_getallusers` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getallusers`()
+BEGIN
+		select u.*, concat(a.firstname,' ',a.lastname) addedbyname
+		from `users` u
+		join `users` a on a.userid=u.addedby
+		order by u.firstname,u.lastname;
+	END */$$
+DELIMITER ;
+
 /* Procedure structure for procedure `sp_getcitydetails` */
 
 /*!50003 DROP PROCEDURE IF EXISTS  `sp_getcitydetails` */;
@@ -325,6 +401,32 @@ DELIMITER $$
 BEGIN
 		select * from `countries`
 		where `countryid`=$countryid;
+	END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `sp_getobjects` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `sp_getobjects` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getobjects`()
+BEGIN
+		select * from `objects`
+		order by `objectname`;
+	END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `sp_getuserdetails` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `sp_getuserdetails` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getuserdetails`($userid int)
+BEGIN
+		select * from `users`
+		where `userid`=$userid;
 	END */$$
 DELIMITER ;
 
@@ -428,6 +530,54 @@ BEGIN
 			update `countries`
 			set `countryname`=$countryname
 			where `countryid`=$countryid;
+		end if;
+	END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `sp_saveuser` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `sp_saveuser` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_saveuser`($userid int,$username varchar(100),$firstname varchar(100),$lastname varchar(100),$userpassword varchar(100),
+	$salt varchar(50),$mobile varchar(50),$emailaddress varchar(100),$systemadmin bool,$addedby int)
+BEGIN
+		if $userid=0 then 
+			insert into `users`(`username`,`firstname`,`lastname`,`password`,`salt`,`systemadmin`,
+			`mobile`,`emailaddress`,`dateadded`,`addedby`)
+			values($username,$firstname,$lastname,$userpassword,$salt,$systemadmin,
+			$mobile,$emailaddress,now(),$addedby);
+			select last_insert_id() into $userid;
+		else
+			update `users`
+			set $username=$username,firstname=$firstname,lastname=$lasyname,systemadmin=$systemadmin,
+			mobile=$mobile,emailaddress=$emailaddress
+			where `userid`=$userid;
+		end if;
+		
+		select $userid as userid;
+	END */$$
+DELIMITER ;
+
+/* Procedure structure for procedure `sp_saveuserprivilege` */
+
+/*!50003 DROP PROCEDURE IF EXISTS  `sp_saveuserprivilege` */;
+
+DELIMITER $$
+
+/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_saveuserprivilege`($userid int,$objectid int, $valid int,$addedby int)
+BEGIN
+		if exists(select * from `userprivileges` where `objectid`=$objectid and `userid`=$userid and `active`=1) then
+			if $valid=0 then 
+				update `userprivileges` set `active`=0
+				where `objectid`=$objectid AND `userid`=$userid;
+			end if;
+		else
+			if $valid=1 then 
+				insert `userprivileges`(`objectid`,`userid`,`active`,`dateadded`,`addedby`)
+				values($objectid,$userid,1,now(),$addedby);
+			end if;
 		end if;
 	END */$$
 DELIMITER ;
